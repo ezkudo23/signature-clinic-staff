@@ -1069,6 +1069,16 @@
       const aa = document.getElementById('action-area');
       aa.innerHTML = '';
 
+      // ดึง shift config จาก response (ถ้ามี)
+      const sc = s.shiftConfig || {};
+      const openTime  = sc.open_time        || '10:00';
+      const closeTime = sc.close_time       || '20:00';
+      const lateThres = sc.late_threshold   || '10:01';
+      const ciStart   = sc.checkin_earliest || '09:30';
+      const ciEnd     = sc.checkin_latest   || '13:00';
+      const coStart   = sc.checkout_earliest|| '18:00';
+      const coEnd     = sc.checkout_latest  || '22:00';
+
       switch (s.status) {
         case 'not_employee':
           sb.className = 'status-box status-error';
@@ -1084,14 +1094,16 @@
           break;
         case 'need_checkin':
           sb.className = 'status-box status-info';
-          sb.innerHTML = '<div class="status-icon">🌅</div><div class="status-title">พร้อมเริ่มงาน</div><div>กดปุ่มด้านล่างเพื่อเช็คอิน</div>';
+          sb.innerHTML = '<div class="status-icon">🌅</div><div class="status-title">พร้อมเริ่มงาน</div>' +
+            '<div style="font-size:12px;color:#888;margin-top:4px;">เช็คอินได้ ' + ciStart + ' - ' + ciEnd + ' น. | ตรงเวลาก่อน ' + lateThres + ' น.</div>';
           aa.innerHTML = '<button class="action-btn btn-checkin" onclick="handleCheckIn()">✅ เช็คอินเข้างาน</button>';
           break;
         case 'need_checkout':
           const lateText = s.isLate ? ' (สาย ' + s.lateMinutes + ' นาที)' : '';
           sb.className = s.isLate ? 'status-box status-warning' : 'status-box status-success';
           sb.innerHTML = '<div class="status-icon">💼</div><div class="status-title">กำลังทำงาน</div>' +
-            '<div class="time-display">เช็คอินเวลา ' + s.checkInTime + lateText + '</div>';
+            '<div class="time-display">เช็คอินเวลา ' + s.checkInTime + lateText + '</div>' +
+            '<div style="font-size:12px;color:#888;margin-top:4px;">เช็คเอาท์ได้ตั้งแต่ ' + coStart + ' น. | ปิด ' + closeTime + ' น.</div>';
           aa.innerHTML = '<button class="action-btn btn-checkout" onclick="handleCheckOut()">🏃 เช็คเอาท์ออกงาน</button>';
           break;
         case 'done':
