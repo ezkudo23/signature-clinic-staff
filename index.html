@@ -1,0 +1,1807 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>ระบบเช็คอิน - Signature Clinic</title>
+  <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Sarabun', 'Noto Sans Thai', sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 16px;
+      color: #333;
+    }
+    .container { max-width: 500px; margin: 0 auto; }
+    .card {
+      background: white;
+      border-radius: 20px;
+      padding: 24px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+      margin-bottom: 16px;
+    }
+    .hidden { display: none !important; }
+
+    /* Header */
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 14px;
+      color: #667eea;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 8px 0;
+      margin-bottom: 8px;
+      font-family: inherit;
+    }
+    .page-title {
+      font-size: 22px;
+      font-weight: 700;
+      color: #1a1a1a;
+      margin-bottom: 4px;
+    }
+    .page-subtitle {
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 20px;
+    }
+
+    /* Home */
+    .greeting { font-size: 18px; margin-bottom: 4px; text-align: center; }
+    .greeting-name { font-weight: 700; color: #667eea; }
+    .date-time { font-size: 14px; color: #666; text-align: center; }
+    .live-clock {
+      font-size: 48px;
+      font-weight: 700;
+      color: #1a1a1a;
+      font-variant-numeric: tabular-nums;
+      margin: 12px 0;
+      letter-spacing: 1px;
+      text-align: center;
+    }
+
+    /* Status */
+    .status-box {
+      padding: 16px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+      font-size: 14px;
+      text-align: center;
+    }
+    .status-info { background: #e3f2fd; color: #1565c0; }
+    .status-success { background: #e8f5e9; color: #2e7d32; }
+    .status-warning { background: #fff3e0; color: #e65100; }
+    .status-error { background: #ffebee; color: #c62828; }
+    .status-icon { font-size: 32px; margin-bottom: 8px; }
+    .status-title { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
+    .time-display {
+      font-size: 13px;
+      margin-top: 8px;
+      padding: 8px;
+      background: rgba(255, 255, 255, 0.6);
+      border-radius: 8px;
+    }
+
+    /* Buttons */
+    .action-btn {
+      width: 100%;
+      padding: 20px;
+      font-size: 18px;
+      font-weight: 700;
+      border: none;
+      border-radius: 16px;
+      color: white;
+      cursor: pointer;
+      transition: transform 0.1s, opacity 0.2s;
+      font-family: inherit;
+      margin-bottom: 12px;
+    }
+    .btn-checkin { background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); }
+    .btn-checkout { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+    .btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+    .btn-danger { background: #e74c3c; color: white; }
+    .btn-success { background: #27ae60; color: white; }
+    .btn-secondary { background: #f0f0f0; color: #333; }
+    .action-btn:active { transform: scale(0.98); }
+    .action-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* Menu buttons (home footer) */
+    .menu-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-top: 16px;
+    }
+    .menu-btn {
+      padding: 14px 8px;
+      background: #f8f9fa;
+      border: 2px solid #e0e0e0;
+      border-radius: 12px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: inherit;
+    }
+    .menu-btn:active { transform: scale(0.95); background: #e8eaf6; }
+    .menu-btn-icon { font-size: 24px; margin-bottom: 4px; }
+    .menu-btn-label { font-size: 12px; color: #555; font-weight: 600; }
+
+    /* Forms */
+    .form-group { margin-bottom: 16px; }
+    label {
+      display: block;
+      font-size: 14px;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 6px;
+    }
+    .required { color: #e74c3c; }
+    input, select, textarea {
+      width: 100%;
+      padding: 12px 14px;
+      font-size: 15px;
+      border: 2px solid #e0e0e0;
+      border-radius: 10px;
+      background: white;
+      font-family: inherit;
+      transition: border-color 0.2s;
+    }
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+    textarea { resize: vertical; min-height: 80px; }
+    .radio-group { display: flex; gap: 10px; }
+    .radio-option {
+      flex: 1;
+      padding: 14px;
+      border: 2px solid #e0e0e0;
+      border-radius: 12px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .radio-option.active {
+      border-color: #667eea;
+      background: #f0f7ff;
+      color: #667eea;
+      font-weight: 700;
+    }
+
+    /* Info box */
+    .info-section {
+      background: #f8f9fa;
+      padding: 14px;
+      border-radius: 10px;
+      margin-bottom: 16px;
+      font-size: 14px;
+    }
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 4px 0;
+    }
+    .info-label { color: #666; }
+    .info-value { color: #1a1a1a; font-weight: 500; }
+
+    .warning-box {
+      background: #fff3cd;
+      border: 1px solid #ffc107;
+      border-radius: 10px;
+      padding: 12px;
+      margin-bottom: 16px;
+      font-size: 13px;
+      color: #856404;
+    }
+
+    /* GPS */
+    .gps-indicator {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 14px;
+      background: #f0f7ff;
+      border-radius: 10px;
+      font-size: 13px;
+      margin-bottom: 12px;
+    }
+    .gps-dot { width: 8px; height: 8px; border-radius: 50%; background: #ccc; }
+    .gps-dot.active { background: #4caf50; animation: pulse 2s infinite; }
+    .gps-dot.error { background: #f44336; }
+    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+    /* Spinner */
+    .loading { text-align: center; padding: 40px 20px; }
+    .spinner {
+      display: inline-block;
+      width: 40px;
+      height: 40px;
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #667eea;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+    /* Modal */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 100;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+    .modal-overlay.show { display: flex; }
+    .modal {
+      background: white;
+      border-radius: 20px;
+      padding: 24px;
+      width: 100%;
+      max-width: 400px;
+      text-align: center;
+    }
+    .modal-icon { font-size: 56px; margin-bottom: 12px; }
+    .modal-title { font-size: 20px; font-weight: 700; margin-bottom: 8px; }
+    .modal-message { font-size: 15px; color: #555; margin-bottom: 20px; line-height: 1.5; }
+    .modal-buttons { display: flex; gap: 10px; }
+    .modal-btn {
+      flex: 1;
+      padding: 14px;
+      border: none;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    /* Processing overlay */
+    .processing {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.7);
+      z-index: 200;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      color: white;
+    }
+    .processing.show { display: flex; }
+    .processing-text { margin-top: 16px; font-size: 16px; font-weight: 600; }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #333;
+      color: white;
+      padding: 12px 20px;
+      border-radius: 10px;
+      font-size: 14px;
+      z-index: 300;
+      opacity: 0;
+      transition: opacity 0.3s;
+      max-width: 90%;
+    }
+    .toast.show { opacity: 1; }
+
+    /* Stats */
+    .stat-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .stat-card {
+      background: #f8f9fa;
+      padding: 14px;
+      border-radius: 12px;
+      text-align: center;
+    }
+    .stat-value {
+      font-size: 24px;
+      font-weight: 700;
+      color: #667eea;
+    }
+    .stat-label {
+      font-size: 12px;
+      color: #666;
+      margin-top: 4px;
+    }
+
+    .timeline-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 0;
+      border-bottom: 1px solid #eee;
+    }
+    .timeline-item:last-child { border-bottom: none; }
+    .timeline-date { flex: 0 0 70px; font-size: 13px; color: #666; }
+    .timeline-info { flex: 1; font-size: 13px; }
+    .timeline-status { font-size: 11px; font-weight: 600; padding: 2px 6px; border-radius: 4px; }
+    .ts-ontime { background: #e8f5e9; color: #2e7d32; }
+    .ts-late { background: #fff3e0; color: #e65100; }
+    .ts-absent { background: #ffebee; color: #c62828; }
+    .ts-leave { background: #e3f2fd; color: #1565c0; }
+    .ts-dayoff { background: #f3e5f5; color: #6a1b9a; }
+
+    /* Swap Confirm */
+    .swap-card {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 20px;
+      border-radius: 16px;
+      margin-bottom: 16px;
+    }
+    .swap-card .title { font-size: 16px; font-weight: 600; margin-bottom: 12px; opacity: 0.9; }
+    .swap-card .date { font-size: 20px; font-weight: 700; margin: 4px 0; }
+    .swap-divider {
+      height: 1px;
+      background: rgba(255, 255, 255, 0.3);
+      margin: 12px 0;
+    }
+
+    .input-help {
+      font-size: 12px;
+      color: #888;
+      margin-top: 4px;
+    }
+
+    /* Admin tabs */
+    .admin-tab {
+      padding: 8px 14px;
+      background: #f0f0f0;
+      border: none;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      font-family: inherit;
+      color: #555;
+      transition: all 0.2s;
+    }
+    .admin-tab.active {
+      background: #667eea;
+      color: white;
+    }
+    .admin-tab-content { display: block; }
+    .admin-tab-content.hidden { display: none; }
+
+    .today-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 0;
+      border-bottom: 1px solid #f0f0f0;
+      gap: 8px;
+    }
+    .today-row:last-child { border-bottom: none; }
+    .today-name { font-weight: 600; font-size: 15px; }
+    .today-time { font-size: 13px; color: #666; }
+    .today-badge {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 12px;
+      white-space: nowrap;
+    }
+    .badge-ontime { background: #e8f5e9; color: #2e7d32; }
+    .badge-late { background: #fff3e0; color: #e65100; }
+    .badge-working { background: #e3f2fd; color: #1565c0; }
+    .badge-absent { background: #ffebee; color: #c62828; }
+    .badge-off { background: #f3e5f5; color: #6a1b9a; }
+    .badge-leave { background: #e0f7fa; color: #00695c; }
+    .badge-forgot { background: #fce4ec; color: #880e4f; }
+
+    .leave-row {
+      padding: 10px;
+      background: #f8f9fa;
+      border-radius: 8px;
+      margin-bottom: 8px;
+      font-size: 13px;
+    }
+    .leave-row-header { font-weight: 600; margin-bottom: 4px; }
+    .leave-row-detail { color: #666; }
+
+    .holiday-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    .holiday-row:last-child { border-bottom: none; }
+    .holiday-delete {
+      background: none;
+      border: none;
+      color: #e74c3c;
+      cursor: pointer;
+      font-size: 18px;
+      padding: 4px 8px;
+    }
+
+    .file-preview {
+      margin-top: 8px;
+      max-width: 100%;
+      border-radius: 8px;
+      display: none;
+    }
+    .file-preview.show { display: block; }
+
+    .debug-log {
+      margin-top: 16px;
+      padding: 10px;
+      background: #1a1a1a;
+      color: #00ff00;
+      border-radius: 8px;
+      font-family: monospace;
+      font-size: 10px;
+      text-align: left;
+      max-height: 150px;
+      overflow-y: auto;
+      display: none;
+    }
+    .debug-log.show { display: block; }
+    .debug-error { color: #ff5555; }
+    .debug-success { color: #55ff55; }
+  </style>
+</head>
+<body>
+  <div class="container">
+
+    <!-- ================= Loading ================= -->
+    <div id="loading-screen" class="card loading">
+      <div class="spinner"></div>
+      <p style="margin-top: 16px; color: #666;">กำลังโหลด...</p>
+      <div id="debug-log" class="debug-log"></div>
+    </div>
+
+    <!-- ================= Page: Home ================= -->
+    <div id="page-home" class="card hidden">
+      <div style="text-align: center;">
+        <div class="greeting">
+          สวัสดี <span id="greeting-name" class="greeting-name">-</span>
+        </div>
+        <div class="date-time" id="date-display">-</div>
+        <div class="live-clock" id="live-clock">--:--:--</div>
+      </div>
+
+      <div id="status-box" class="status-box status-info">
+        <div class="status-icon">⏳</div>
+        <div class="status-title">กำลังตรวจสอบสถานะ...</div>
+      </div>
+
+      <div id="gps-indicator" class="gps-indicator">
+        <div class="gps-dot"></div>
+        <div id="gps-text">กำลังหาตำแหน่ง...</div>
+      </div>
+
+      <div id="action-area"></div>
+
+      <div class="info-section">
+        <div class="info-row">
+          <span class="info-label">พนักงาน:</span>
+          <span id="info-nickname" class="info-value">-</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">วันหยุดประจำ:</span>
+          <span id="info-dayoff" class="info-value">-</span>
+        </div>
+      </div>
+
+      <div class="menu-grid">
+        <button class="menu-btn" onclick="navigate('leave')">
+          <div class="menu-btn-icon">📝</div>
+          <div class="menu-btn-label">ขอลา</div>
+        </button>
+        <button class="menu-btn" onclick="navigate('swap')">
+          <div class="menu-btn-icon">🔄</div>
+          <div class="menu-btn-label">สลับวันหยุด</div>
+        </button>
+        <button class="menu-btn" onclick="navigate('stats')">
+          <div class="menu-btn-icon">📊</div>
+          <div class="menu-btn-label">สถิติของฉัน</div>
+        </button>
+        <button class="menu-btn" onclick="navigate('admin')" style="grid-column: 1/-1; background:#f0f4ff; border-color:#667eea;">
+          <div class="menu-btn-icon">🔐</div>
+          <div class="menu-btn-label" style="color:#667eea;">Admin Menu</div>
+        </button>
+      </div>
+    </div>
+
+    <!-- ================= Page: Leave Request ================= -->
+    <div id="page-leave" class="card hidden">
+      <button class="back-btn" onclick="navigate('home')">← กลับ</button>
+      <div class="page-title">📝 ขอลา</div>
+      <div class="page-subtitle">ยื่นใบลาผ่าน LINE</div>
+
+      <div class="form-group">
+        <label>ประเภทการลา <span class="required">*</span></label>
+        <div class="radio-group">
+          <div class="radio-option" data-leave-type="sick" onclick="selectLeaveType('sick')">
+            🤒 ลาป่วย
+          </div>
+          <div class="radio-option" data-leave-type="personal" onclick="selectLeaveType('personal')">
+            🏃 ลากิจ
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>วันที่เริ่มลา <span class="required">*</span></label>
+        <input type="date" id="leave-start-date">
+      </div>
+
+      <div class="form-group">
+        <label>วันที่สิ้นสุด <span class="required">*</span></label>
+        <input type="date" id="leave-end-date">
+        <div class="input-help">ถ้าลาวันเดียว เลือกวันเดียวกันกับวันเริ่ม</div>
+      </div>
+
+      <div class="form-group">
+        <label>เหตุผล <span class="required">*</span></label>
+        <textarea id="leave-reason" placeholder="ระบุเหตุผลการลา..."></textarea>
+      </div>
+
+      <div id="medcert-area" class="form-group hidden">
+        <label>ใบรับรองแพทย์ <span class="required">*</span></label>
+        <div class="warning-box">
+          ⚠️ ลาป่วย 2 วันขึ้นไป ต้องแนบใบรับรองแพทย์จากโรงพยาบาลรัฐ
+        </div>
+        <input type="file" id="medcert-input" accept="image/*">
+        <img id="medcert-preview" class="file-preview">
+      </div>
+
+      <button class="action-btn btn-primary" onclick="submitLeave()">📤 ส่งใบลา</button>
+    </div>
+
+    <!-- ================= Page: Shift Swap ================= -->
+    <div id="page-swap" class="card hidden">
+      <button class="back-btn" onclick="navigate('home')">← กลับ</button>
+      <div class="page-title">🔄 สลับวันหยุด</div>
+      <div class="page-subtitle">ขอสลับวันหยุดกับเพื่อน</div>
+
+      <div class="info-section" id="swap-my-info">
+        <div class="info-row">
+          <span class="info-label">ฉัน:</span>
+          <span id="swap-my-name" class="info-value">-</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">วันหยุดประจำ:</span>
+          <span id="swap-my-dayoff" class="info-value">-</span>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>ขอสลับกับ <span class="required">*</span></label>
+        <select id="swap-partner">
+          <option value="">-- เลือกเพื่อน --</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>วันที่ฉันอยากหยุด <span class="required">*</span></label>
+        <input type="date" id="swap-date">
+        <div class="input-help">ต้องเป็นวันหยุดประจำของเพื่อนที่เลือก</div>
+      </div>
+
+      <div class="warning-box hidden" id="swap-preview">
+        <div id="swap-preview-content"></div>
+      </div>
+
+      <div class="form-group">
+        <label>เหตุผล <span class="required">*</span></label>
+        <textarea id="swap-reason" placeholder="ระบุเหตุผลการขอสลับ..."></textarea>
+      </div>
+
+      <button class="action-btn btn-primary" onclick="submitSwap()">📤 ส่งคำขอ</button>
+    </div>
+
+    <!-- ================= Page: Swap Confirm (จาก LINE message link) ================= -->
+    <div id="page-swap-confirm" class="card hidden">
+      <div class="page-title">🔄 คำขอสลับวันหยุด</div>
+      <div class="page-subtitle" id="swap-confirm-subtitle">-</div>
+
+      <div class="swap-card" id="swap-confirm-card">
+        <div class="title">คำขอจาก</div>
+        <div id="swap-requester-name" style="font-size:18px;font-weight:700;">-</div>
+
+        <div class="swap-divider"></div>
+
+        <div class="title">ขอหยุดวันที่</div>
+        <div id="swap-date-off" class="date">-</div>
+
+        <div class="swap-divider"></div>
+
+        <div class="title">จะมาแทนวันที่</div>
+        <div id="swap-date-work" class="date">-</div>
+      </div>
+
+      <div class="info-section">
+        <div class="info-row">
+          <span class="info-label">หากยอมรับ:</span>
+        </div>
+        <div style="font-size:13px;color:#555;padding:4px 0;" id="swap-impact-text">-</div>
+      </div>
+
+      <div class="form-group">
+        <label>เหตุผล</label>
+        <div id="swap-reason-display" style="padding:10px;background:#f8f9fa;border-radius:8px;font-size:14px;">-</div>
+      </div>
+
+      <button class="action-btn btn-success" onclick="respondSwap(true)">✅ ยอมรับ</button>
+      <button class="action-btn btn-danger" onclick="respondSwap(false)">❌ ปฏิเสธ</button>
+    </div>
+
+    <!-- ================= Page: My Stats ================= -->
+    <div id="page-stats" class="card hidden">
+      <button class="back-btn" onclick="navigate('home')">← กลับ</button>
+      <div class="page-title">📊 สถิติของฉัน</div>
+      <div class="page-subtitle" id="stats-subtitle">-</div>
+
+      <div style="font-weight:600;margin-bottom:12px;">🗓️ เดือนนี้</div>
+      <div class="stat-grid">
+        <div class="stat-card">
+          <div class="stat-value" id="stat-total-days">0</div>
+          <div class="stat-label">วันทำงาน</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="stat-late-count">0</div>
+          <div class="stat-label">สาย (ครั้ง)</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="stat-late-minutes">0</div>
+          <div class="stat-label">สายรวม (นาที)</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="stat-early-out">0</div>
+          <div class="stat-label">ออกก่อนเวลา</div>
+        </div>
+      </div>
+
+      <div style="font-weight:600;margin:16px 0 12px;">🏖️ สิทธิการลา</div>
+      <div class="stat-grid">
+        <div class="stat-card">
+          <div class="stat-value" id="stat-personal-remaining">3</div>
+          <div class="stat-label">ลากิจคงเหลือ (วัน)</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="stat-sick-total">0</div>
+          <div class="stat-label">ลาป่วยสะสม (วัน)</div>
+        </div>
+      </div>
+
+      <div style="font-weight:600;margin:16px 0 8px;">📅 ประวัติ 7 วันล่าสุด</div>
+      <div id="recent-list"></div>
+    </div>
+
+  </div>
+
+  <!-- ================= Page: Admin Menu ================= -->
+  <div id="page-admin" class="card hidden">
+    <!-- PIN Screen -->
+    <div id="admin-pin-screen">
+      <div class="page-title">🔐 Admin Menu</div>
+      <div class="page-subtitle">กรุณาใส่ PIN เพื่อเข้าใช้งาน</div>
+      <div class="form-group" style="margin-top:24px;">
+        <input type="password" id="admin-pin-input" placeholder="PIN" maxlength="8"
+          inputmode="numeric" style="text-align:center;font-size:24px;letter-spacing:8px;">
+      </div>
+      <div id="admin-pin-error" class="warning-box hidden">❌ PIN ไม่ถูกต้อง กรุณาลองใหม่</div>
+      <button class="action-btn btn-primary" onclick="verifyAdminPin()">🔓 เข้าสู่ระบบ</button>
+      <button class="action-btn btn-secondary" onclick="navigate('home')" style="margin-top:8px;">← กลับ</button>
+    </div>
+
+    <!-- Admin Dashboard -->
+    <div id="admin-dashboard" class="hidden">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+        <div class="page-title" style="margin-bottom:0;">🔐 Admin</div>
+        <button onclick="navigate('home')" style="background:none;border:none;color:#667eea;font-size:14px;cursor:pointer;font-family:inherit;">← กลับ</button>
+      </div>
+
+      <div style="display:flex;gap:6px;margin-bottom:20px;overflow-x:auto;padding-bottom:4px;">
+        <button class="admin-tab active" onclick="showAdminTab('today')" data-tab="today">📋 วันนี้</button>
+        <button class="admin-tab" onclick="showAdminTab('edit')" data-tab="edit">✏️ แก้เวลา</button>
+        <button class="admin-tab" onclick="showAdminTab('lwp')" data-tab="lwp">📋 LWP</button>
+        <button class="admin-tab" onclick="showAdminTab('leaves')" data-tab="leaves">📝 ใบลา</button>
+        <button class="admin-tab" onclick="showAdminTab('holidays')" data-tab="holidays">🗓️ วันหยุด</button>
+      </div>
+
+      <!-- Tab: Today -->
+      <div id="admin-tab-today" class="admin-tab-content">
+        <div style="font-weight:600;margin-bottom:12px;" id="admin-today-title">สถานะวันนี้</div>
+        <div id="admin-today-list"><div class="loading"><div class="spinner"></div></div></div>
+      </div>
+
+      <!-- Tab: Edit Time -->
+      <div id="admin-tab-edit" class="admin-tab-content hidden">
+        <div style="font-weight:600;margin-bottom:12px;">✏️ แก้ไขเวลา</div>
+        <div class="form-group">
+          <label>พนักงาน</label>
+          <select id="edit-emp-select"><option value="">-- เลือกพนักงาน --</option></select>
+        </div>
+        <div class="form-group">
+          <label>วันที่</label>
+          <input type="date" id="edit-date">
+        </div>
+        <div class="form-group">
+          <label>เวลาเช็คอิน (HH:MM)</label>
+          <input type="time" id="edit-checkin">
+        </div>
+        <div class="form-group">
+          <label>เวลาเช็คเอาท์ (HH:MM)</label>
+          <input type="time" id="edit-checkout">
+        </div>
+        <div class="form-group">
+          <label>หมายเหตุ</label>
+          <input type="text" id="edit-note" placeholder="เหตุผลที่แก้ไข">
+        </div>
+        <div class="warning-box">
+          <label style="display:flex;align-items:flex-start;gap:8px;cursor:pointer;">
+            <input type="checkbox" id="edit-create-if-missing" style="flex-shrink:0;margin-top:3px;">
+            <span style="line-height:1.5;">สร้างบันทึกใหม่ถ้ายังไม่มีข้อมูล<br>(พนักงานไม่ได้เช็คอินเลย)</span>
+          </label>
+        </div>
+        <button class="action-btn btn-primary" onclick="submitEditTime()">💾 บันทึก</button>
+      </div>
+
+      <!-- Tab: LWP -->
+      <div id="admin-tab-lwp" class="admin-tab-content hidden">
+        <div style="font-weight:600;margin-bottom:12px;">📋 บันทึก LWP (ลาไม่รับค่าจ้าง)</div>
+        <div class="warning-box">⚠️ LWP จะไม่แสดงให้พนักงานเห็น เฉพาะ Admin เท่านั้น</div>
+        <div class="form-group">
+          <label>พนักงาน</label>
+          <select id="lwp-emp-select"><option value="">-- เลือกพนักงาน --</option></select>
+        </div>
+        <div class="form-group">
+          <label>วันที่เริ่ม</label>
+          <input type="date" id="lwp-start">
+        </div>
+        <div class="form-group">
+          <label>วันที่สิ้นสุด</label>
+          <input type="date" id="lwp-end">
+        </div>
+        <div class="form-group">
+          <label>เหตุผล</label>
+          <textarea id="lwp-reason" placeholder="เหตุผล LWP..."></textarea>
+        </div>
+        <button class="action-btn btn-primary" onclick="submitLwp()">💾 บันทึก LWP</button>
+      </div>
+
+      <!-- Tab: Leaves -->
+      <div id="admin-tab-leaves" class="admin-tab-content hidden">
+        <div style="font-weight:600;margin-bottom:12px;">📝 รายการใบลา</div>
+        <div class="form-group">
+          <select id="leaves-filter-emp"><option value="">ทุกคน</option></select>
+        </div>
+        <button class="action-btn btn-secondary" onclick="loadLeaves()" style="margin-bottom:16px;">🔍 ค้นหา</button>
+        <div id="admin-leaves-list"></div>
+      </div>
+
+      <!-- Tab: Holidays -->
+      <div id="admin-tab-holidays" class="admin-tab-content hidden">
+        <div style="font-weight:600;margin-bottom:12px;">🗓️ วันหยุดนักขัตฤกษ์</div>
+        <div class="info-section" style="margin-bottom:16px;">
+          <div style="font-weight:600;margin-bottom:8px;">เพิ่มวันหยุดใหม่</div>
+          <div class="form-group">
+            <label>วันที่</label>
+            <input type="date" id="holiday-date">
+          </div>
+          <div class="form-group">
+            <label>ชื่อวันหยุด</label>
+            <input type="text" id="holiday-name" placeholder="เช่น วันสงกรานต์">
+          </div>
+          <button class="action-btn btn-primary" onclick="addHoliday()" style="margin-top:4px;">➕ เพิ่ม</button>
+        </div>
+        <div style="font-weight:600;margin-bottom:8px;">รายการวันหยุด</div>
+        <div id="admin-holidays-list"><div class="loading"><div class="spinner"></div></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= Modal ================= -->
+  <div id="confirm-modal" class="modal-overlay">
+    <div class="modal">
+      <div class="modal-icon" id="modal-icon">⚠️</div>
+      <div class="modal-title" id="modal-title">ยืนยัน</div>
+      <div class="modal-message" id="modal-message">...</div>
+      <div class="modal-buttons">
+        <button class="modal-btn btn-secondary" onclick="cancelModal()">ยกเลิก</button>
+        <button class="modal-btn btn-primary" style="color:white;" onclick="confirmModal()">ยืนยัน</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= Processing ================= -->
+  <div id="processing" class="processing">
+    <div class="spinner"></div>
+    <div id="processing-text" class="processing-text">กำลังบันทึก...</div>
+  </div>
+
+  <!-- Hidden camera input (check-in/out selfie) -->
+  <input type="file" id="camera-input" style="display:none" accept="image/*" capture="user">
+
+  <!-- Toast -->
+  <div id="toast" class="toast"></div>
+
+  <script>
+    // ============================================================
+    // ⚙️ CONFIG
+    // ============================================================
+    const LIFF_ID = '2009832304-dOfzPJTp';
+    const BACKEND_URL = 'https://script.google.com/macros/s/AKfycbxQVnAlGXUgdki1d_E3hbXY9r3Z0i72VION35CdER8QIzeuEobaAHDjdDyW2p0cEgObCQ/exec';
+    const DEBUG = false;
+    // ============================================================
+
+    // State
+    let userProfile = null;
+    let currentLocation = null;
+    let currentStatus = null;
+    let pendingAction = null;
+    let pendingActionData = null;
+    let modalCallback = null;
+    let currentPage = 'home';
+    let selectedLeaveType = null;
+    let allEmployees = [];
+    let currentSwapDetail = null;
+
+    // Debug
+    function debugLog(msg, type) {
+      console.log('[DEBUG]', msg);
+      if (!DEBUG) return;
+      const box = document.getElementById('debug-log');
+      if (!box) return;
+      box.classList.add('show');
+      const p = document.createElement('p');
+      if (type === 'error') p.className = 'debug-error';
+      if (type === 'success') p.className = 'debug-success';
+      p.textContent = '[' + new Date().toLocaleTimeString('en-US', { hour12: false }) + '] ' + msg;
+      box.appendChild(p);
+      box.scrollTop = box.scrollHeight;
+    }
+
+    window.addEventListener('error', e => debugLog('❌ ' + e.message, 'error'));
+    window.addEventListener('unhandledrejection', e => debugLog('❌ ' + (e.reason?.message || e.reason), 'error'));
+
+    function toast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 3500);
+    }
+
+    function showProcessing(text) {
+      document.getElementById('processing-text').textContent = text || 'กำลังบันทึก...';
+      document.getElementById('processing').classList.add('show');
+    }
+    function hideProcessing() {
+      document.getElementById('processing').classList.remove('show');
+    }
+
+    // Live clock
+    function updateClock() {
+      const now = new Date();
+      const h = String(now.getHours()).padStart(2, '0');
+      const m = String(now.getMinutes()).padStart(2, '0');
+      const s = String(now.getSeconds()).padStart(2, '0');
+      const el = document.getElementById('live-clock');
+      if (el) el.textContent = h + ':' + m + ':' + s;
+    }
+
+    function formatThaiDate(d) {
+      const days = ['อาทิตย์', 'จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์'];
+      const months = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+      return days[d.getDay()] + ' ' + d.getDate() + ' ' + months[d.getMonth()] + ' ' + (d.getFullYear() + 543);
+    }
+
+    // ============================================================
+    // INIT
+    // ============================================================
+    async function init() {
+      try {
+        debugLog('▶ Init');
+
+        if (BACKEND_URL === 'PASTE_YOUR_APPS_SCRIPT_URL_HERE') {
+          setError('ยังไม่ได้ตั้งค่า BACKEND_URL');
+          return;
+        }
+
+        // Mock mode for testing
+        const urlParams = new URLSearchParams(window.location.search);
+        const mockUid = urlParams.get('mock_uid');
+
+        if (mockUid) {
+          debugLog('⚠️ MOCK MODE: ' + mockUid, 'error');
+          userProfile = { userId: mockUid, displayName: 'Test User', pictureUrl: '' };
+        } else {
+          if (typeof liff === 'undefined') {
+            debugLog('❌ LIFF SDK not loaded', 'error');
+            return;
+          }
+          await liff.init({ liffId: LIFF_ID });
+          debugLog('✓ LIFF init', 'success');
+
+          if (!liff.isLoggedIn()) { liff.login(); return; }
+
+          userProfile = await liff.getProfile();
+        }
+        debugLog('✓ Profile: ' + userProfile.displayName, 'success');
+
+        document.getElementById('greeting-name').textContent = userProfile.displayName;
+        document.getElementById('date-display').textContent = formatThaiDate(new Date());
+        updateClock();
+        setInterval(updateClock, 1000);
+
+        // Route initial page
+        const page = urlParams.get('page') || 'home';
+        const req = urlParams.get('req');
+        await routeTo(page, { req });
+
+        // Start GPS (lazy, only if needed for home)
+        startGps();
+
+        setTimeout(() => {
+          document.getElementById('loading-screen').classList.add('hidden');
+        }, DEBUG ? 1200 : 300);
+
+      } catch (err) {
+        debugLog('❌ ' + err.message, 'error');
+        setError('เกิดข้อผิดพลาด: ' + err.message);
+      }
+    }
+
+    // ============================================================
+    // ROUTING
+    // ============================================================
+    function navigate(page, params) {
+      routeTo(page, params || {});
+    }
+
+    async function routeTo(page, params) {
+      currentPage = page;
+      // Hide all pages
+      ['home', 'leave', 'swap', 'swap-confirm', 'stats', 'admin'].forEach(p => {
+        const el = document.getElementById('page-' + p);
+        if (el) el.classList.add('hidden');
+      });
+
+      switch (page) {
+        case 'home':
+          document.getElementById('page-home').classList.remove('hidden');
+          await fetchStatus();
+          break;
+        case 'leave':
+          document.getElementById('page-leave').classList.remove('hidden');
+          initLeavePage();
+          break;
+        case 'swap':
+          document.getElementById('page-swap').classList.remove('hidden');
+          await initSwapPage();
+          break;
+        case 'swap_confirm':
+        case 'swap-confirm':
+          document.getElementById('page-swap-confirm').classList.remove('hidden');
+          await initSwapConfirmPage(params.req);
+          break;
+        case 'stats':
+          document.getElementById('page-stats').classList.remove('hidden');
+          await initStatsPage();
+          break;
+        case 'admin':
+          document.getElementById('page-admin').classList.remove('hidden');
+          initAdminPage();
+          break;
+        default:
+          navigate('home');
+      }
+    }
+
+    // ============================================================
+    // GPS
+    // ============================================================
+    function startGps() {
+      if (!navigator.geolocation) {
+        updateGpsIndicator('error', '❌ เบราว์เซอร์ไม่รองรับ GPS');
+        return;
+      }
+      updateGpsIndicator('', '🔍 กำลังหาตำแหน่ง...');
+
+      navigator.geolocation.watchPosition(
+        pos => {
+          currentLocation = {
+            latitude: pos.coords.latitude,
+            longitude: pos.coords.longitude,
+            accuracy: pos.coords.accuracy
+          };
+          updateGpsIndicator('active', '📍 ได้ตำแหน่ง (ความแม่นยำ ±' + Math.round(pos.coords.accuracy) + 'm)');
+        },
+        err => {
+          updateGpsIndicator('error', '❌ ไม่สามารถหาตำแหน่งได้');
+        },
+        { enableHighAccuracy: true, maximumAge: 10000, timeout: 15000 }
+      );
+    }
+
+    function updateGpsIndicator(cls, text) {
+      const dot = document.querySelector('#gps-indicator .gps-dot');
+      if (dot) dot.className = 'gps-dot ' + cls;
+      const tx = document.getElementById('gps-text');
+      if (tx) tx.textContent = text;
+    }
+
+    // ============================================================
+    // HOME: Fetch status & render
+    // ============================================================
+    async function fetchStatus() {
+      try {
+        const res = await apiCall({ action: 'get_status', lineUid: userProfile.userId });
+        if (res.success) {
+          currentStatus = res.data;
+          renderStatus(res.data);
+        } else {
+          setError(res.error || 'ไม่สามารถดึงข้อมูลได้');
+        }
+      } catch (err) {
+        setError('เชื่อมต่อ server ไม่ได้');
+      }
+    }
+
+    function renderStatus(s) {
+      if (s.employee) {
+        document.getElementById('info-nickname').textContent = s.employee.nickname;
+        document.getElementById('info-dayoff').textContent = s.employee.dayOff;
+      }
+
+      const sb = document.getElementById('status-box');
+      const aa = document.getElementById('action-area');
+      aa.innerHTML = '';
+
+      switch (s.status) {
+        case 'not_employee':
+          sb.className = 'status-box status-error';
+          sb.innerHTML = '<div class="status-icon">🚫</div><div class="status-title">ไม่พบข้อมูลพนักงาน</div>';
+          break;
+        case 'day_off':
+          sb.className = 'status-box status-info';
+          sb.innerHTML = '<div class="status-icon">🏖️</div><div class="status-title">วันหยุดประจำสัปดาห์</div><div>พักผ่อนให้เต็มที่นะ!</div>';
+          break;
+        case 'on_leave':
+          sb.className = 'status-box status-info';
+          sb.innerHTML = '<div class="status-icon">📝</div><div class="status-title">วันนี้คุณมีใบลา</div>';
+          break;
+        case 'need_checkin':
+          sb.className = 'status-box status-info';
+          sb.innerHTML = '<div class="status-icon">🌅</div><div class="status-title">พร้อมเริ่มงาน</div><div>กดปุ่มด้านล่างเพื่อเช็คอิน</div>';
+          aa.innerHTML = '<button class="action-btn btn-checkin" onclick="handleCheckIn()">✅ เช็คอินเข้างาน</button>';
+          break;
+        case 'need_checkout':
+          const lateText = s.isLate ? ' (สาย ' + s.lateMinutes + ' นาที)' : '';
+          sb.className = s.isLate ? 'status-box status-warning' : 'status-box status-success';
+          sb.innerHTML = '<div class="status-icon">💼</div><div class="status-title">กำลังทำงาน</div>' +
+            '<div class="time-display">เช็คอินเวลา ' + s.checkInTime + lateText + '</div>';
+          aa.innerHTML = '<button class="action-btn btn-checkout" onclick="handleCheckOut()">🏃 เช็คเอาท์ออกงาน</button>';
+          break;
+        case 'done':
+          const flags = [];
+          if (s.isLate) flags.push('สาย');
+          if (s.isEarlyOut) flags.push('ออกก่อนเวลา');
+          const fText = flags.length ? ' (' + flags.join(', ') + ')' : '';
+          sb.className = 'status-box status-success';
+          sb.innerHTML = '<div class="status-icon">✅</div><div class="status-title">เสร็จสิ้นวันทำงาน' + fText + '</div>' +
+            '<div class="time-display">เข้า ' + s.checkInTime + ' → ออก ' + s.checkOutTime + '</div>';
+          break;
+      }
+    }
+
+    function setError(msg) {
+      const sb = document.getElementById('status-box');
+      if (sb) {
+        sb.className = 'status-box status-error';
+        sb.innerHTML = '<div class="status-icon">⚠️</div><div class="status-title">เกิดข้อผิดพลาด</div><div>' + msg + '</div>';
+      }
+      document.getElementById('loading-screen').classList.add('hidden');
+      document.getElementById('page-home').classList.remove('hidden');
+    }
+
+    // ============================================================
+    // CHECK-IN / OUT (Phase 2A carried over)
+    // ============================================================
+    function handleCheckIn() {
+      if (!currentLocation) { toast('⚠️ ยังไม่ได้ตำแหน่ง GPS'); return; }
+      pendingAction = 'check_in';
+      document.getElementById('camera-input').click();
+    }
+    function handleCheckOut() {
+      if (!currentLocation) { toast('⚠️ ยังไม่ได้ตำแหน่ง GPS'); return; }
+      pendingAction = 'check_out';
+      document.getElementById('camera-input').click();
+    }
+
+    document.getElementById('camera-input').addEventListener('change', async function(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      showProcessing('กำลังประมวลผลรูป...');
+      try {
+        const base64 = await fileToBase64(file, 800, 0.7);
+        if (pendingAction === 'check_in') {
+          await submitCheckIn(base64);
+        } else if (pendingAction === 'check_out') {
+          await submitCheckOut(base64, false);
+        }
+      } catch (err) {
+        hideProcessing();
+        toast('❌ ' + err.message);
+      }
+    });
+
+    function fileToBase64(file, maxWidth, quality) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = e => {
+          const img = new Image();
+          img.onload = () => {
+            const canvas = document.createElement('canvas');
+            let w = img.width, h = img.height;
+            if (w > maxWidth) { h = h * (maxWidth / w); w = maxWidth; }
+            canvas.width = w; canvas.height = h;
+            canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+            resolve(canvas.toDataURL('image/jpeg', quality));
+          };
+          img.onerror = reject;
+          img.src = e.target.result;
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+
+    async function submitCheckIn(selfieBase64) {
+      showProcessing('กำลังเช็คอิน...');
+      const res = await apiCall({
+        action: 'check_in',
+        lineUid: userProfile.userId,
+        latitude: currentLocation.latitude,
+        longitude: currentLocation.longitude,
+        selfieBase64: selfieBase64
+      });
+      hideProcessing();
+      if (res.success) { toast('✅ ' + res.message); await fetchStatus(); }
+      else toast('❌ ' + res.error);
+    }
+
+    async function submitCheckOut(selfieBase64, confirmed) {
+      showProcessing('กำลังเช็คเอาท์...');
+      const res = await apiCall({
+        action: 'check_out',
+        lineUid: userProfile.userId,
+        latitude: currentLocation.latitude,
+        longitude: currentLocation.longitude,
+        selfieBase64: selfieBase64,
+        confirmedEarlyOut: confirmed
+      });
+      hideProcessing();
+      if (res.needConfirm) {
+        window._pendingSelfie = selfieBase64;
+        showModal('⚠️', 'ยืนยันเช็คเอาท์', res.message, () => {
+          submitCheckOut(window._pendingSelfie, true);
+        });
+        return;
+      }
+      if (res.success) { toast('✅ ' + res.message); await fetchStatus(); }
+      else toast('❌ ' + res.error);
+    }
+
+    // ============================================================
+    // LEAVE PAGE
+    // ============================================================
+    function initLeavePage() {
+      selectedLeaveType = null;
+      document.querySelectorAll('[data-leave-type]').forEach(el => el.classList.remove('active'));
+      document.getElementById('leave-start-date').value = '';
+      document.getElementById('leave-end-date').value = '';
+      document.getElementById('leave-reason').value = '';
+      document.getElementById('medcert-input').value = '';
+      document.getElementById('medcert-preview').classList.remove('show');
+      document.getElementById('medcert-area').classList.add('hidden');
+    }
+
+    function selectLeaveType(type) {
+      selectedLeaveType = type;
+      document.querySelectorAll('[data-leave-type]').forEach(el => {
+        el.classList.toggle('active', el.dataset.leaveType === type);
+      });
+      // Show medcert only if sick + multi-day (ประเมินตอน submit อีกที)
+      updateMedCertVisibility();
+    }
+
+    document.getElementById('leave-start-date').addEventListener('change', updateMedCertVisibility);
+    document.getElementById('leave-end-date').addEventListener('change', updateMedCertVisibility);
+
+    function updateMedCertVisibility() {
+      const start = document.getElementById('leave-start-date').value;
+      const end = document.getElementById('leave-end-date').value;
+      if (selectedLeaveType === 'sick' && start && end) {
+        const d = Math.round((new Date(end) - new Date(start)) / 86400000) + 1;
+        document.getElementById('medcert-area').classList.toggle('hidden', d < 2);
+      } else {
+        document.getElementById('medcert-area').classList.add('hidden');
+      }
+    }
+
+    document.getElementById('medcert-input').addEventListener('change', async function(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const base64 = await fileToBase64(file, 1200, 0.8);
+      const img = document.getElementById('medcert-preview');
+      img.src = base64;
+      img.classList.add('show');
+    });
+
+    async function submitLeave(confirmedWithOwner) {
+      if (!selectedLeaveType) { toast('⚠️ กรุณาเลือกประเภทการลา'); return; }
+      const start = document.getElementById('leave-start-date').value;
+      const end = document.getElementById('leave-end-date').value;
+      const reason = document.getElementById('leave-reason').value.trim();
+
+      if (!start || !end) { toast('⚠️ กรุณาเลือกวันที่'); return; }
+      if (!reason) { toast('⚠️ กรุณาระบุเหตุผล'); return; }
+
+      let medCertBase64 = '';
+      const days = Math.round((new Date(end) - new Date(start)) / 86400000) + 1;
+      if (selectedLeaveType === 'sick' && days >= 2) {
+        const preview = document.getElementById('medcert-preview');
+        if (!preview.src || !preview.classList.contains('show')) {
+          toast('⚠️ กรุณาแนบใบรับรองแพทย์');
+          return;
+        }
+        medCertBase64 = preview.src;
+      }
+
+      showProcessing('กำลังส่งใบลา...');
+      const res = await apiCall({
+        action: 'leave_request',
+        lineUid: userProfile.userId,
+        leaveType: selectedLeaveType,
+        startDate: start,
+        endDate: end,
+        reason: reason,
+        medCertBase64: medCertBase64,
+        confirmedWithOwner: confirmedWithOwner === true
+      });
+      hideProcessing();
+
+      if (res.needConfirm) {
+        showModal('⚠️', 'ยืนยันลากิจ', res.message + '\n\nหากยังไม่ได้คุย กรุณาไปคุยก่อน', () => {
+          submitLeave(true);
+        });
+        return;
+      }
+
+      if (res.success) {
+        toast('✅ ' + res.message);
+        setTimeout(() => navigate('home'), 1500);
+      } else {
+        toast('❌ ' + res.error);
+      }
+    }
+
+    // ============================================================
+    // SWAP PAGE
+    // ============================================================
+    async function initSwapPage() {
+      // Show my info
+      document.getElementById('swap-my-name').textContent = currentStatus?.employee?.nickname || '-';
+      document.getElementById('swap-my-dayoff').textContent = currentStatus?.employee?.dayOff || '-';
+
+      // Fetch employees
+      const res = await apiCall({ action: 'get_employees', lineUid: userProfile.userId });
+      if (!res.success) { toast('❌ ' + res.error); return; }
+      allEmployees = res.data;
+
+      const sel = document.getElementById('swap-partner');
+      sel.innerHTML = '<option value="">-- เลือกเพื่อน --</option>';
+      allEmployees.forEach(emp => {
+        const opt = document.createElement('option');
+        opt.value = emp.employee_id;
+        opt.textContent = emp.nickname + ' (หยุด ' + emp.dayOff + ')';
+        opt.dataset.dayOff = emp.dayOff;
+        opt.dataset.nickname = emp.nickname;
+        sel.appendChild(opt);
+      });
+
+      // Reset
+      document.getElementById('swap-date').value = '';
+      document.getElementById('swap-reason').value = '';
+      document.getElementById('swap-preview').classList.add('hidden');
+    }
+
+    document.getElementById('swap-partner').addEventListener('change', updateSwapPreview);
+    document.getElementById('swap-date').addEventListener('change', updateSwapPreview);
+
+    function updateSwapPreview() {
+      const sel = document.getElementById('swap-partner');
+      const dateStr = document.getElementById('swap-date').value;
+      const preview = document.getElementById('swap-preview');
+      const content = document.getElementById('swap-preview-content');
+
+      if (!sel.value || !dateStr) {
+        preview.classList.add('hidden');
+        return;
+      }
+
+      const opt = sel.options[sel.selectedIndex];
+      const partnerDayOff = opt.dataset.dayOff;
+      const partnerName = opt.dataset.nickname;
+
+      const d = new Date(dateStr);
+      const dayNames = ['อาทิตย์', 'จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์'];
+      const dayName = dayNames[d.getDay()];
+
+      if (dayName !== partnerDayOff) {
+        content.innerHTML = '⚠️ วันที่เลือก (' + dayName + ') ไม่ใช่วันหยุดของ ' + partnerName +
+          ' (หยุด ' + partnerDayOff + ')<br>กรุณาเลือกวัน' + partnerDayOff;
+        preview.classList.remove('hidden');
+        return;
+      }
+
+      // OK — show preview
+      const myDayOff = currentStatus?.employee?.dayOff || '';
+      content.innerHTML = '✅ คุณจะได้หยุด ' + formatThaiDate(d) +
+        '<br>และต้องมาทำงานวันหยุดเดิม (' + myDayOff + ') สัปดาห์เดียวกัน';
+      preview.classList.remove('hidden');
+    }
+
+    async function submitSwap() {
+      const partnerId = document.getElementById('swap-partner').value;
+      const dateStr = document.getElementById('swap-date').value;
+      const reason = document.getElementById('swap-reason').value.trim();
+
+      if (!partnerId) { toast('⚠️ เลือกเพื่อน'); return; }
+      if (!dateStr) { toast('⚠️ เลือกวันที่'); return; }
+      if (!reason) { toast('⚠️ ระบุเหตุผล'); return; }
+
+      showProcessing('กำลังส่งคำขอ...');
+      const res = await apiCall({
+        action: 'swap_request',
+        lineUid: userProfile.userId,
+        partnerId: partnerId,
+        requestDate: dateStr,
+        reason: reason
+      });
+      hideProcessing();
+
+      if (res.success) {
+        toast('✅ ' + res.message);
+        setTimeout(() => navigate('home'), 1500);
+      } else {
+        toast('❌ ' + res.error);
+      }
+    }
+
+    // ============================================================
+    // SWAP CONFIRM PAGE
+    // ============================================================
+    async function initSwapConfirmPage(swapId) {
+      if (!swapId) { setError('ไม่พบรหัสคำขอ'); return; }
+
+      const res = await apiCall({ action: 'get_swap_detail', swapId: swapId });
+      if (!res.success) { setError(res.error || 'ไม่พบคำขอ'); return; }
+
+      const swap = res.data;
+      currentSwapDetail = swap;
+
+      document.getElementById('swap-confirm-subtitle').textContent =
+        'สถานะ: ' + (swap.status === 'pending' ? 'รอดำเนินการ' :
+                     swap.status === 'approved' ? 'อนุมัติแล้ว' : 'ปฏิเสธแล้ว');
+
+      document.getElementById('swap-requester-name').textContent = swap.requester_nickname;
+      document.getElementById('swap-date-off').textContent = formatThaiDate(new Date(swap.date_B_off));
+      document.getElementById('swap-date-work').textContent = formatThaiDate(new Date(swap.date_B_work));
+
+      document.getElementById('swap-impact-text').textContent =
+        'คุณจะหยุด ' + formatThaiDate(new Date(swap.date_B_off)) +
+        ' แทนวันเดิม และมาทำงาน ' + formatThaiDate(new Date(swap.date_B_work));
+
+      document.getElementById('swap-reason-display').textContent = swap.reason || '(ไม่ระบุ)';
+
+      // Hide buttons if already responded
+      if (swap.status !== 'pending') {
+        document.querySelectorAll('#page-swap-confirm .action-btn').forEach(b => b.style.display = 'none');
+      }
+    }
+
+    async function respondSwap(accept) {
+      if (!currentSwapDetail) return;
+
+      showProcessing(accept ? 'กำลังยอมรับ...' : 'กำลังปฏิเสธ...');
+      const res = await apiCall({
+        action: 'swap_respond',
+        lineUid: userProfile.userId,
+        swapId: currentSwapDetail.swap_id,
+        accept: accept
+      });
+      hideProcessing();
+
+      if (res.success) {
+        toast('✅ ' + res.message);
+        setTimeout(() => navigate('home'), 2000);
+      } else {
+        toast('❌ ' + res.error);
+      }
+    }
+
+    // ============================================================
+    // STATS PAGE
+    // ============================================================
+    async function initStatsPage() {
+      document.getElementById('stats-subtitle').textContent = 'กำลังโหลด...';
+      const res = await apiCall({ action: 'get_my_stats', lineUid: userProfile.userId });
+      if (!res.success) { toast('❌ ' + res.error); return; }
+
+      const d = res.data;
+      const thaiMonths = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+
+      document.getElementById('stats-subtitle').textContent =
+        d.employee.nickname + ' • ' + thaiMonths[d.month - 1] + ' ' + d.year;
+
+      document.getElementById('stat-total-days').textContent = d.monthStats.total_days;
+      document.getElementById('stat-late-count').textContent = d.monthStats.late_count;
+      document.getElementById('stat-late-minutes').textContent = d.monthStats.late_minutes_total;
+      document.getElementById('stat-early-out').textContent = d.monthStats.early_out;
+
+      document.getElementById('stat-personal-remaining').textContent = d.leaves.personal_remaining;
+      document.getElementById('stat-sick-total').textContent = d.leaves.sick_total;
+
+      // Recent timeline
+      const listEl = document.getElementById('recent-list');
+      listEl.innerHTML = '';
+      if (d.recent.length === 0) {
+        listEl.innerHTML = '<div style="padding:12px;color:#888;font-size:13px;text-align:center;">ไม่มีข้อมูล</div>';
+      } else {
+        d.recent.forEach(r => {
+          const item = document.createElement('div');
+          item.className = 'timeline-item';
+          const dt = new Date(r.date);
+          const dd = String(dt.getDate()).padStart(2, '0') + '/' + thaiMonths[dt.getMonth()];
+          let status = '';
+          let cls = 'ts-ontime';
+          if (r.isLate) { status = 'สาย ' + r.lateMinutes + ' นาที'; cls = 'ts-late'; }
+          else status = 'ตรงเวลา';
+
+          item.innerHTML = '<div class="timeline-date">' + dd + '</div>' +
+            '<div class="timeline-info">' + r.checkIn + ' → ' + (r.checkOut || '-') + '</div>' +
+            '<div class="timeline-status ' + cls + '">' + status + '</div>';
+          listEl.appendChild(item);
+        });
+      }
+    }
+
+    // ============================================================
+    // HELPERS
+    // ============================================================
+    async function apiCall(data) {
+      try {
+        const response = await fetch(BACKEND_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify(data)
+        });
+        return await response.json();
+      } catch (err) {
+        return { success: false, error: err.message };
+      }
+    }
+
+    function showModal(icon, title, message, onConfirm) {
+      document.getElementById('modal-icon').textContent = icon;
+      document.getElementById('modal-title').textContent = title;
+      document.getElementById('modal-message').textContent = message;
+      modalCallback = onConfirm;
+      document.getElementById('confirm-modal').classList.add('show');
+    }
+
+    function confirmModal() {
+      document.getElementById('confirm-modal').classList.remove('show');
+      if (modalCallback) modalCallback();
+      modalCallback = null;
+    }
+
+    function cancelModal() {
+      document.getElementById('confirm-modal').classList.remove('show');
+      modalCallback = null;
+    }
+
+    // ============================================================
+    // ADMIN
+    // ============================================================
+    let adminVerified = false;
+    let adminEmployees = [];
+
+    function initAdminPage() {
+      if (!adminVerified) {
+        document.getElementById('admin-pin-screen').classList.remove('hidden');
+        document.getElementById('admin-dashboard').classList.add('hidden');
+        document.getElementById('admin-pin-input').value = '';
+        document.getElementById('admin-pin-error').classList.add('hidden');
+      } else {
+        showAdminDashboard();
+      }
+    }
+
+    async function verifyAdminPin() {
+      const pin = document.getElementById('admin-pin-input').value;
+      if (!pin) { toast('⚠️ กรุณาใส่ PIN'); return; }
+
+      showProcessing('กำลังตรวจสอบ...');
+      const res = await apiCall({ action: 'admin_verify_pin', pin: pin });
+      hideProcessing();
+
+      if (res.success) {
+        adminVerified = true;
+        document.getElementById('admin-pin-error').classList.add('hidden');
+        showAdminDashboard();
+      } else {
+        document.getElementById('admin-pin-error').classList.remove('hidden');
+        document.getElementById('admin-pin-input').value = '';
+      }
+    }
+
+    async function showAdminDashboard() {
+      document.getElementById('admin-pin-screen').classList.add('hidden');
+      document.getElementById('admin-dashboard').classList.remove('hidden');
+
+      // Load employees for dropdowns — Admin sees ALL employees
+      const res = await apiCall({ action: 'admin_get_all_employees' });
+      if (res.success) {
+        adminEmployees = res.data;
+      } else {
+        adminEmployees = [];
+      }
+
+      // Populate dropdowns
+      ['edit-emp-select', 'lwp-emp-select', 'leaves-filter-emp'].forEach(id => {
+        const sel = document.getElementById(id);
+        const hasAll = id === 'leaves-filter-emp';
+        sel.innerHTML = hasAll ? '<option value="">ทุกคน</option>' : '<option value="">-- เลือกพนักงาน --</option>';
+        adminEmployees.forEach(emp => {
+          const opt = document.createElement('option');
+          opt.value = emp.employee_id;
+          opt.textContent = emp.nickname + ' (' + emp.fullName + ')';
+          sel.appendChild(opt);
+        });
+      });
+
+      // Default tab
+      showAdminTab('today');
+    }
+
+    function showAdminTab(tab) {
+      // Update tabs
+      document.querySelectorAll('.admin-tab').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.tab === tab);
+      });
+      // Update content
+      ['today', 'edit', 'lwp', 'leaves', 'holidays'].forEach(t => {
+        const el = document.getElementById('admin-tab-' + t);
+        if (el) el.classList.toggle('hidden', t !== tab);
+      });
+      // Load data
+      if (tab === 'today') loadAdminToday();
+      if (tab === 'holidays') loadHolidays();
+    }
+
+    async function loadAdminToday() {
+      const listEl = document.getElementById('admin-today-list');
+      listEl.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+
+      const res = await apiCall({ action: 'admin_today', lineUid: userProfile.userId });
+      if (!res.success) { listEl.innerHTML = '<div style="color:#e74c3c;padding:12px;">❌ ' + res.error + '</div>'; return; }
+
+      document.getElementById('admin-today-title').textContent = 'สถานะ ' + res.data.dateDisplay;
+      listEl.innerHTML = '';
+
+      if (res.data.summary.length === 0) {
+        listEl.innerHTML = '<div style="padding:12px;color:#888;text-align:center;">ไม่มีข้อมูล</div>';
+        return;
+      }
+
+      res.data.summary.forEach(emp => {
+        const row = document.createElement('div');
+        row.className = 'today-row';
+
+        let badge = '';
+        let timeText = '';
+        switch (emp.status) {
+          case 'day_off':  badge = '<span class="today-badge badge-off">วันหยุด</span>'; break;
+          case 'on_leave': badge = '<span class="today-badge badge-leave">ลา</span>'; break;
+          case 'absent':   badge = '<span class="today-badge badge-absent">ยังไม่มา</span>'; break;
+          case 'working':
+            badge = emp.isLate
+              ? '<span class="today-badge badge-late">สาย ' + emp.lateMinutes + ' น.</span>'
+              : '<span class="today-badge badge-working">กำลังทำงาน</span>';
+            timeText = 'เข้า ' + emp.checkIn;
+            break;
+          case 'done':
+            badge = emp.isLate
+              ? '<span class="today-badge badge-late">สาย ' + emp.lateMinutes + ' น.</span>'
+              : '<span class="today-badge badge-ontime">ตรงเวลา</span>';
+            timeText = emp.checkIn + ' → ' + emp.checkOut;
+            if (emp.forgotCheckout) badge += ' <span class="today-badge badge-forgot">ลืมเช็คเอาท์</span>';
+            break;
+        }
+
+        row.innerHTML = '<div><div class="today-name">' + emp.nickname + '</div>' +
+          (timeText ? '<div class="today-time">' + timeText + '</div>' : '') + '</div>' +
+          '<div>' + badge + '</div>';
+        listEl.appendChild(row);
+      });
+    }
+
+    async function submitEditTime() {
+      const empId = document.getElementById('edit-emp-select').value;
+      const date = document.getElementById('edit-date').value;
+      const checkIn = document.getElementById('edit-checkin').value;
+      const checkOut = document.getElementById('edit-checkout').value;
+      const note = document.getElementById('edit-note').value;
+      const createIfMissing = document.getElementById('edit-create-if-missing').checked;
+
+      if (!empId) { toast('⚠️ เลือกพนักงานก่อน'); return; }
+      if (!date) { toast('⚠️ เลือกวันที่'); return; }
+      if (!checkIn && !checkOut) { toast('⚠️ ใส่เวลาอย่างน้อย 1 อย่าง'); return; }
+
+      showProcessing('กำลังบันทึก...');
+      const res = await apiCall({
+        action: 'admin_edit_time_v2',
+        employee_id: empId,
+        date: date,
+        newCheckIn: checkIn || null,
+        newCheckOut: checkOut || null,
+        note: note,
+        createIfMissing: createIfMissing
+      });
+      hideProcessing();
+
+      if (res.success) {
+        toast('✅ ' + res.message);
+        // Clear form
+        document.getElementById('edit-checkin').value = '';
+        document.getElementById('edit-checkout').value = '';
+        document.getElementById('edit-note').value = '';
+      } else {
+        toast('❌ ' + res.error);
+      }
+    }
+
+    async function submitLwp() {
+      const empId = document.getElementById('lwp-emp-select').value;
+      const start = document.getElementById('lwp-start').value;
+      const end = document.getElementById('lwp-end').value;
+      const reason = document.getElementById('lwp-reason').value;
+
+      if (!empId) { toast('⚠️ เลือกพนักงาน'); return; }
+      if (!start || !end) { toast('⚠️ ระบุวันที่'); return; }
+
+      showProcessing('กำลังบันทึก LWP...');
+      const res = await apiCall({
+        action: 'admin_add_lwp',
+        employee_id: empId,
+        startDate: start,
+        endDate: end,
+        reason: reason
+      });
+      hideProcessing();
+
+      if (res.success) {
+        toast('✅ ' + res.message);
+        document.getElementById('lwp-start').value = '';
+        document.getElementById('lwp-end').value = '';
+        document.getElementById('lwp-reason').value = '';
+      } else {
+        toast('❌ ' + res.error);
+      }
+    }
+
+    async function loadLeaves() {
+      const empId = document.getElementById('leaves-filter-emp').value;
+      const listEl = document.getElementById('admin-leaves-list');
+      listEl.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+
+      const res = await apiCall({
+        action: 'admin_get_leaves',
+        employee_id: empId || null
+      });
+
+      if (!res.success) { listEl.innerHTML = '<div style="color:#e74c3c;">❌ ' + res.error + '</div>'; return; }
+
+      if (res.data.length === 0) {
+        listEl.innerHTML = '<div style="padding:12px;color:#888;text-align:center;">ไม่มีรายการ</div>';
+        return;
+      }
+
+      listEl.innerHTML = '';
+      res.data.forEach(lv => {
+        const div = document.createElement('div');
+        div.className = 'leave-row';
+        const typeEmoji = lv.leave_type === 'ลาป่วย' ? '🤒' : lv.leave_type === 'LWP' ? '📋' : '🏃';
+        div.innerHTML = '<div class="leave-row-header">' + typeEmoji + ' ' + lv.nickname + ' — ' + lv.leave_type + '</div>' +
+          '<div class="leave-row-detail">' + lv.start_date + (lv.start_date !== lv.end_date ? ' ถึง ' + lv.end_date : '') + ' (' + lv.days + ' วัน)</div>' +
+          '<div class="leave-row-detail" style="color:#555;">' + (lv.reason || '-') + '</div>' +
+          (lv.med_cert_url ? '<div><a href="' + lv.med_cert_url + '" target="_blank" style="color:#667eea;font-size:12px;">📎 ดูใบรับรองแพทย์</a></div>' : '');
+        listEl.appendChild(div);
+      });
+    }
+
+    async function loadHolidays() {
+      const listEl = document.getElementById('admin-holidays-list');
+      listEl.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+
+      const res = await apiCall({ action: 'admin_get_holidays' });
+      if (!res.success) { listEl.innerHTML = '<div style="color:#e74c3c;">❌ ' + res.error + '</div>'; return; }
+
+      if (res.data.length === 0) {
+        listEl.innerHTML = '<div style="padding:12px;color:#888;text-align:center;">ยังไม่มีวันหยุด</div>';
+        return;
+      }
+
+      listEl.innerHTML = '';
+      res.data.forEach(h => {
+        const row = document.createElement('div');
+        row.className = 'holiday-row';
+        row.innerHTML = '<div><div style="font-weight:600;font-size:14px;">' + h.name + '</div>' +
+          '<div style="color:#666;font-size:13px;">' + h.date + '</div></div>' +
+          '<button class="holiday-delete" onclick="deleteHoliday(\'' + h.date + '\', \'' + h.name + '\')">🗑️</button>';
+        listEl.appendChild(row);
+      });
+    }
+
+    async function addHoliday() {
+      const date = document.getElementById('holiday-date').value;
+      const name = document.getElementById('holiday-name').value.trim();
+      if (!date || !name) { toast('⚠️ ระบุวันที่และชื่อวันหยุด'); return; }
+
+      showProcessing('กำลังเพิ่ม...');
+      const res = await apiCall({ action: 'admin_add_holiday', date: date, name: name });
+      hideProcessing();
+
+      if (res.success) {
+        toast('✅ ' + res.message);
+        document.getElementById('holiday-date').value = '';
+        document.getElementById('holiday-name').value = '';
+        loadHolidays();
+      } else {
+        toast('❌ ' + res.error);
+      }
+    }
+
+    async function deleteHoliday(date, name) {
+      showModal('🗑️', 'ลบวันหยุด', 'ลบ "' + name + '" (' + date + ') ออกจากระบบ?', async () => {
+        showProcessing('กำลังลบ...');
+        const res = await apiCall({ action: 'admin_delete_holiday', date: date });
+        hideProcessing();
+        if (res.success) { toast('✅ ลบแล้ว'); loadHolidays(); }
+        else toast('❌ ' + res.error);
+      });
+    }
+
+    // Enter key สำหรับ PIN
+    document.getElementById('admin-pin-input').addEventListener('keydown', e => {
+      if (e.key === 'Enter') verifyAdminPin();
+    });
+
+    window.addEventListener('load', init);
+  </script>
+</body>
+</html>
